@@ -2,14 +2,12 @@ import { NavLink, Outlet } from "react-router-dom";
 
 export default function ConsumosLayout() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* Tabs */}
       <div className="flex gap-2 ">
         <Tab to="luz" label="Luz" />
         <Tab to="agua" label="Agua" />
       </div>
-
-      {/* Contenido del tab */}
       <Outlet />
     </div>
   );

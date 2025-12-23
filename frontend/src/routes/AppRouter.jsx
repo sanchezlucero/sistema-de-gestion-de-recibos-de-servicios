@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Dashboard from "../pages/Dashboard";
 import Luz from "../pages/Consumos/Luz";
@@ -11,6 +11,7 @@ export default function AppRouter() {
       <Route element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="consumos" element={<ConsumosLayout />}>
+          <Route index element={<Navigate to="luz" replace />} />
           <Route index element={<Luz />} />
           <Route path="luz" element={<Luz />} />
           <Route path="agua" element={<Agua />} />
