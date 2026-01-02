@@ -7,6 +7,7 @@ export default function ConsumosLayout() {
       <div className="flex gap-2 ">
         <Tab to="luz" label="Luz" />
         <Tab to="agua" label="Agua" />
+        <Tab to="reparto" label="Reparto" />
       </div>
       <Outlet />
     </div>
