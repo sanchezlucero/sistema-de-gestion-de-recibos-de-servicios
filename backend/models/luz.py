@@ -3,8 +3,8 @@ from datetime import date
 from database import Base
 
 
-class ConsumoDB(Base):
-    __tablename__ = "consumos"
+class ConsumoLuzDB(Base):
+    __tablename__ = "consumos_luz"
 
     id = Column(Integer, primary_key=True, index=True)
     tipo = Column(String)

@@ -5,6 +5,7 @@ import Luz from "../pages/Consumos/Luz";
 import Agua from "../pages/Consumos/Agua";
 import ConsumosLayout from "../pages/Consumos/ConsumosLayout";
 import Reparto from "../pages/Consumos/Reparto";
+import Configuracion from "../pages/Configuracion";
 
 export default function AppRouter() {
   return (
@@ -18,6 +19,7 @@ export default function AppRouter() {
           <Route path="agua" element={<Agua />} />
           <Route path="reparto" element={<Reparto />} />
         </Route>
+        <Route path="configuracion" element={<Configuracion />} />
       </Route>
     </Routes>
   );

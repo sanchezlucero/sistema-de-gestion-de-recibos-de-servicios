@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import logo from "../../assets/images/logotipo-sedapal.png";
 
 export default function Agua() {
-  const [form, setForm] = useState({
+  const dataDefault = {
     consumo_pasado: 0,
     consumo_actual: 0,
     volumen_agua: 0,
@@ -15,7 +15,8 @@ export default function Agua() {
     redondeo_actual: 0,
     fecha: "",
     importe_total: "",
-  });
+  };
+  const [form, setForm] = useState(dataDefault);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -40,8 +41,9 @@ export default function Agua() {
       redondedo_anterior: ultimoRecibo.redondedo_anterior,
       redondeo_actual: ultimoRecibo.redondeo_actual,
       fecha: ultimoRecibo.fecha,
+      importe_total: ultimoRecibo.importe_total,
     }));
-    setTotal(ultimoRecibo.total)
+    setTotal(ultimoRecibo.total);
   }, []);
 
   const handleChange = (e) => {
@@ -99,232 +101,237 @@ export default function Agua() {
       ...form,
       id: crypto.randomUUID,
       total: calculateAgua(form),
-      mes: Number(form.fecha.split("-")[1]),
     };
     console.log("nuevoRecibo: ", nuevoRecibo);
     recibos.push(nuevoRecibo);
     const json = JSON.stringify(recibos);
     localStorage.setItem("recibosAgua", json);
   };
+
+  const handleLimpiar = () => {
+    if (
+      window.confirm("¿Estás seguro de que deseas limpiar todos los campos?")
+    ) {
+      setForm(dataDefault);
+      setTotal(0);
+    }
+  };
+
   return (
-    <div>
-      <div className="bg-white mx-4 p-4 rounded-lg shadow">
-        <div>
-          <div className="logo-agua">
-            <img src={logo} alt="cargando logo sedapal" className="w-32" />
+    <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
+      <div className="flex items-center gap-4 mb-8">
+        <img src={logo} alt="cargando logo sedapal" className="w-32" />
+      </div>
+      <div className="py-2">
+        <form action="" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Consumo (m³) mes pasado
+              </label>
+              <input
+                type="number"
+                name="consumo_pasado"
+                value={form.consumo_pasado}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 50.50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Consumo (m³) mes actual
+              </label>
+              <input
+                type="number"
+                name="consumo_actual"
+                value={form.consumo_actual}
+                onChange={handleChange}
+                placeholder="Ej: 60.50"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Consumo (m³)
+              </label>
+              <input
+                type="number"
+                name="consumo"
+                value={form.consumo}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 25"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Servicio de alcantarillado
+              </label>
+              <input
+                type="number"
+                name="servicio_alcantarillado"
+                value={form.servicio_alcantarillado}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 30.50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Volumen de Agua potable
+              </label>
+              <input
+                type="number"
+                name="volumen_agua"
+                value={form.volumen_agua}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 30.50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Cargo Fijo
+              </label>
+              <input
+                type="number"
+                name="cargo_fijo"
+                value={form.cargo_fijo}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 2.50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                IGV{" "}
+              </label>
+              <input
+                type="number"
+                name="igv"
+                value={form.igv}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 25.40"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Mora
+              </label>
+              <input
+                type="number"
+                name="mora"
+                value={form.mora}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 0.20"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Redondeo del mes anterior
+              </label>
+              <input
+                type="number"
+                name="redondedo_anterior"
+                value={form.redondedo_anterior}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 0.01"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Redondeo del mes actual
+              </label>
+              <input
+                type="number"
+                name="redondeo_actual"
+                value={form.redondeo_actual}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 0.01"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Fecha de vencimiento{" "}
+              </label>
+              <input
+                type="date"
+                name="fecha"
+                value={form.fecha}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 0.01"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 text-left">
+                Importe total{" "}
+              </label>
+              <input
+                type="number"
+                name="importe_total"
+                value={form.importe_total}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Ej: 150.00"
+              />
+            </div>
           </div>
-          <div className="py-2">
-            <form action="" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Consumo (m³) mes pasado
-                  </label>
-                  <input
-                    type="number"
-                    name="consumo_pasado"
-                    value={form.consumo_pasado}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 50.50"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Consumo (m³) mes actual
-                  </label>
-                  <input
-                    type="number"
-                    name="consumo_actual"
-                    value={form.consumo_actual}
-                    onChange={handleChange}
-                    placeholder="Ej: 60.50"
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+          <div className="mt-8 rounded-xl border border-purple-200 p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-600">Total a pagar</p>
+              <p className="text-3xl font-bold text-purple-700">
+                S/ {total.toFixed(2)}
+              </p>
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Consumo (m³)
-                  </label>
-                  <input
-                    type="number"
-                    name="consumo"
-                    value={form.consumo}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 25"
-                  />
-                </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleLimpiar}
+                className="px-6 py-3 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Limpiar campos
+              </button>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Servicio de alcantarillado
-                  </label>
-                  <input
-                    type="number"
-                    name="servicio_alcantarillado"
-                    value={form.servicio_alcantarillado}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 30.50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Volumen de Agua potable
-                  </label>
-                  <input
-                    type="number"
-                    name="volumen_agua"
-                    value={form.volumen_agua}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 30.50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Cargo Fijo
-                  </label>
-                  <input
-                    type="number"
-                    name="cargo_fijo"
-                    value={form.cargo_fijo}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 2.50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    IGV{" "}
-                  </label>
-                  <input
-                    type="number"
-                    name="igv"
-                    value={form.igv}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 25.40"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Mora
-                  </label>
-                  <input
-                    type="number"
-                    name="mora"
-                    value={form.mora}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 0.20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Redondeo del mes anterior
-                  </label>
-                  <input
-                    type="number"
-                    name="redondedo_anterior"
-                    value={form.redondedo_anterior}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 0.01"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Redondeo del mes actual
-                  </label>
-                  <input
-                    type="number"
-                    name="redondeo_actual"
-                    value={form.redondeo_actual}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 0.01"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Fecha de vencimiento{" "}
-                  </label>
-                  <input
-                    type="date"
-                    name="fecha"
-                    value={form.fecha}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 0.01"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 text-left">
-                    Importe total{" "}
-                  </label>
-                  <input
-                    type="number"
-                    name="importe_total"
-                    value={form.importe_total}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Ej: 150.00"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-8 rounded-xl  border border-purple-200 p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600">Total a pagar</p>
-                  <p className="text-3xl font-bold text-purple-700">
-                    S/ {total.toFixed(2)}
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-sm font-medium"
-                >
-                  Guardar recibo
-                </button>
-              </div>
-
-              {/* <div className="text-right  my-4">
-                <button
-                  type="submit"
-                  className="w-50 rounded-md bg-purple-600 py-2 text-white text-sm
-                   hover:bg-purple-700 transition "
-                >
-                  Guardar registro
-                </button>
-              </div> */}
-            </form>
+              <button
+                type="submit"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all active:scale-95 shadow-sm"
+              >
+                Guardar recibo
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

@@ -1,17 +1,25 @@
-from fastapi import FastAPI, Depends, HTTPException
-from database import SessionLocal
-from schemas import Consumo, ConsumoResponse
-from models import ConsumoDB
-from sqlalchemy.orm import Session
-from typing import List
+from fastapi import FastAPI
 
-app = FastAPI()
+from routers import luz
+from routers import agua
+from routers import configuracion
 
-# Base de datos - temporal
-consumos_db = []
+app = FastAPI(
+    title="Sistema de Consumos",
+    version="1.0.0"
+)
+
+# Registrar routers
+app.include_router(luz.router)
+app.include_router(agua.router)
 
 
-def get_db():
+@app.get("/")
+def root():
+    return {"status": "ok"}
+
+
+""" def get_db():
     db = SessionLocal()
     try:
         yield db
@@ -153,9 +161,4 @@ def listar_consumos(db: Session = Depends(get_db)):
 def listar_consumos_por_periodo(mes: int, anio: int, db: Session = Depends(get_db)):
     consumos = db.query(ConsumoDB).filter(
         ConsumoDB.mes == mes, ConsumoDB.anio == anio).all()
-    return consumos
-
-
-@app.get("/")
-def root():
-    return {"hello": "World 123"}
+    return consumos """

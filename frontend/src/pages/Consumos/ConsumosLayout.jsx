@@ -19,15 +19,12 @@ function Tab({ to, label }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `
-        px-4 py-2 text-sm font-medium
-        border-b-2 -mb-px
+        `px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
         ${
           isActive
             ? "border-purple-500 text-purple-600"
             : "border-transparent text-slate-500 hover:text-slate-700"
-        }
-        `
+        }`
       }
     >
       {label}
