@@ -27,7 +27,7 @@ export default function Sidebar({ open }) {
         transition-all duration-300
         ${open ? "w-64" : "w-16"}
         flex flex-col py-4
-      `} /* className="w-16 bg-white flex flex-col items-center py-4 gap-6" */
+      `}
     >
       <nav className="flex flex-col gap-2 px-2">
         {menu.map(({ label, icon: Icon, path }) => (

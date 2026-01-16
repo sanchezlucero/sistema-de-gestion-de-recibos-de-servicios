@@ -1,0 +1,16 @@
+export const LUZ_DATA_DEFAULT = {
+  consumo_pasado: "",
+  consumo_actual: "",
+  reposicion: "",
+  cargo_fijo: "",
+  interes_compensatorio: "",
+  alumbrado: "",
+  igv: "",
+  aporte_ley: "",
+  redondeo_anterior: "",
+  redondeo_actual: "",
+  fecha: "",
+  importe_total: "",
+  consumo_kWh: "",
+  mora: "",
+};
