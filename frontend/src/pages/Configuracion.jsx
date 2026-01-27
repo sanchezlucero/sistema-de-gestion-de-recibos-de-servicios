@@ -1,42 +1,83 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Save, Users, Building2, Smartphone, ChevronDown } from "lucide-react";
 import { notify } from "../utils/notifications";
+import { ReceiptContext } from "../context/ReceiptContext";
 
 export default function Configuracion() {
+  const { updateConfig } = useContext(ReceiptContext);
   const [config, setConfig] = useState({
-    totalPisos: 5,
-    miPiso: 2,
-    nombreEdificio: "",
-    vecinos: [],
+    totalFloors: 5,
+    myFloor: 2,
+    buildingName: "",
+    neighbors: [],
   });
 
-  // Cargar configuración inicial
   useEffect(() => {
     const savedConfig = JSON.parse(localStorage.getItem("configuracion"));
     console.log("savedConfig: ", savedConfig);
     if (savedConfig) {
       setConfig(savedConfig);
     } else {
-      // Si no hay, inicializamos vecinos según el total de pisos
-      const inicializarVecinos = Array.from({ length: 5 }, (_, i) => ({
-        piso: i + 1,
-        nombre: "",
-        telefono: "",
-      }));
-      setConfig((prev) => ({ ...prev, vecinos: inicializarVecinos }));
+      const initialNeighbors = Array.from(
+        { length: config.totalFloors },
+        (_, i) => ({
+          floor: i + 1,
+          name: "",
+          phone: "",
+        }),
+      );
+      setConfig((prev) => ({ ...prev, neighbors: initialNeighbors }));
     }
   }, []);
 
+  useEffect(() => {
+    setConfig((prev) => {
+      const currentCount = prev.neighbors.length;
+      const targetCount = prev.totalFloors || 0;
+
+      if (targetCount === currentCount) return prev;
+
+      if (targetCount > currentCount) {
+        const extraNeighbors = Array.from(
+          { length: targetCount - currentCount },
+          (_, i) => ({
+            floor: currentCount + i + 1,
+            name: "",
+            phone: "",
+          }),
+        );
+        return { ...prev, neighbors: [...prev.neighbors, ...extraNeighbors] };
+      } else {
+        // Remove rows from the end (slice)
+        return { ...prev, neighbors: prev.neighbors.slice(0, targetCount) };
+      }
+    });
+  }, [config.totalFloors]); // Runs whenever totalFloors changes
+
   const handleSave = () => {
-    localStorage.setItem("configuracion", JSON.stringify(config));
+    const { totalFloors, myFloor } = config;
+
+    if (!totalFloors || totalFloors <= 0) {
+      return notify.warn("Por favor, ingresa el número total de pisos.");
+    }
+
+    if (!myFloor) {
+      return notify.warn("Por favor, selecciona cuál es tu piso.");
+    }
+
+    if (Number(myFloor) > Number(totalFloors)) {
+      return notify.warn("Tu piso no puede ser mayor al total de pisos.");
+    }
+
+    updateConfig(config);
     notify.success("Configuración guardada correctamente");
   };
 
-  const updateVecino = (piso, campo, valor) => {
-    const nuevosVecinos = config.vecinos.map((v) =>
-      v.piso === piso ? { ...v, [campo]: valor } : v
+  const updateNeighbors = (floor, campo, valor) => {
+    const newNeighbors = config.neighbors.map((v) =>
+      v.floor === floor ? { ...v, [campo]: valor } : v,
     );
-    setConfig({ ...config, vecinos: nuevosVecinos });
+    setConfig({ ...config, neighbors: newNeighbors });
   };
 
   return (
@@ -50,7 +91,6 @@ export default function Configuracion() {
         </button>
       </div>
 
-      {/* BLOQUE 1: AJUSTES GENERALES */}
       <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
         <div className="flex items-center gap-3 mb-6">
           <Building2 className="text-purple-600" />
@@ -64,10 +104,11 @@ export default function Configuracion() {
             </label>
             <input
               type="number"
-              value={config.totalPisos}
-              onChange={(e) =>
-                setConfig({ ...config, totalPisos: parseInt(e.target.value) })
-              }
+              value={config.totalFloors}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setConfig({ ...config, totalFloors: isNaN(val) ? 0 : val });
+              }}
               className="w-full rounded-xl border p-3 text-sm outline-none transition-all shadow-sm border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100"
             />
           </div>
@@ -77,20 +118,20 @@ export default function Configuracion() {
             </label>
             <div className="relative group">
               <select
-                value={config.miPiso}
-                onChange={(e) =>
-                  setConfig({ ...config, miPiso: parseInt(e.target.value) })
-                }
+                value={config.myFloor}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setConfig({ ...config, myFloor: isNaN(val) ? 0 : val });
+                }}
                 className="w-full appearance-none rounded-xl border p-3 pr-10 text-sm outline-none transition-all shadow-sm border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 bg-white cursor-pointer"
               >
-                {Array.from({ length: config.totalPisos }, (_, i) => (
+                {Array.from({ length: config.totalFloors }, (_, i) => (
                   <option key={i + 1} value={i + 1}>
                     Piso {i + 1}
                   </option>
                 ))}
               </select>
 
-              {/* Icono de flecha personalizado */}
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 group-focus-within:text-purple-500">
                 <ChevronDown size={18} strokeWidth={2.5} />
               </div>
@@ -103,9 +144,9 @@ export default function Configuracion() {
             <input
               type="text"
               placeholder="Ej: Residencial Los Olivos"
-              value={config.nombreEdificio}
+              value={config.buildingName}
               onChange={(e) =>
-                setConfig({ ...config, nombreEdificio: e.target.value })
+                setConfig({ ...config, buildingName: e.target.value })
               }
               className="w-full rounded-xl border p-3 text-sm outline-none transition-all shadow-sm border-slate-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-100"
             />
@@ -113,7 +154,6 @@ export default function Configuracion() {
         </div>
       </div>
 
-      {/* BLOQUE 2: DIRECTORIO DE VECINOS */}
       <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
         <div className="flex items-center gap-3 mb-6">
           <Users className="text-purple-600" />
@@ -132,18 +172,18 @@ export default function Configuracion() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {config.vecinos.map((vecino) => (
-                <tr key={vecino.piso}>
+              {config?.neighbors?.map((neighboor) => (
+                <tr key={neighboor.floor}>
                   <td className="py-4 font-bold text-slate-700">
-                    Piso {vecino.piso}
+                    Piso {neighboor.floor}
                   </td>
                   <td className="py-2">
                     <input
                       type="text"
                       placeholder="Nombre del vecino"
-                      value={vecino.nombre}
+                      value={neighboor.name}
                       onChange={(e) =>
-                        updateVecino(vecino.piso, "nombre", e.target.value)
+                        updateNeighbors(neighboor.floor, "name", e.target.value)
                       }
                       className="w-full bg-transparent border-none focus:bg-slate-50 rounded-lg px-2 py-1 outline-none text-slate-600"
                     />
@@ -154,9 +194,13 @@ export default function Configuracion() {
                       <input
                         type="text"
                         placeholder="51999888777"
-                        value={vecino.telefono}
+                        value={neighboor.phone}
                         onChange={(e) =>
-                          updateVecino(vecino.piso, "telefono", e.target.value)
+                          updateNeighbors(
+                            neighboor.floor,
+                            "phone",
+                            e.target.value,
+                          )
                         }
                         className="w-full bg-transparent border-none focus:bg-slate-50 rounded-lg px-2 py-1 outline-none text-slate-600"
                       />

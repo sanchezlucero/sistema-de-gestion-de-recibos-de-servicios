@@ -1,93 +1,119 @@
-import { useContext, useEffect, useState } from "react";
-import { ReciboContext } from "../../context/ReciboContext";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { ReceiptContext } from "../../context/ReceiptContext";
 import { FileCheck } from "lucide-react";
 import { notify } from "../../utils/notifications";
 
 export default function Reparto() {
-  const { periodoSeleccionado, historialAgua, historialLuz, configuracion } =
-    useContext(ReciboContext);
-  const numPisosActualles = configuracion?.totalPisos || 5;
-  const miPisoAdmin = configuracion?.miPiso || 2;
-  const [servicio, setServicio] = useState("agua");
+  const { selectedPeriod, waterHistory, lightHistory, config } =
+    useContext(ReceiptContext);
+  console.log("config ", config);
+  const totalFloors = config?.totalFloors;
+  const adminFloor = config?.myFloor || 2;
+  const [service, setService] = useState("agua");
 
-  const crearAportesBase = (n) =>
+  const createBaseContributions = (n) =>
     Array.from({ length: n }, (_, i) => ({
-      piso: i + 1,
-      monto: "",
-      pagado: false,
+      floor: i + 1,
+      amount: "",
+      is_paid: false,
     }));
 
   const [form, setForm] = useState({
-    aportes: crearAportesBase(numPisosActualles),
-    total_recibo: "",
-    mes: "",
+    contributions: createBaseContributions(totalFloors),
+    total_receipt: "",
+    month: "",
   });
 
-  const totalAportado = form?.aportes?.reduce(
-    (acc, item) => acc + Number(item.monto || 0),
-    0
+  const totalContributed = useMemo(
+    () =>
+      form.contributions.reduce(
+        (acc, item) => acc + Number(item.amount || 0),
+        0,
+      ),
+    [form.contributions],
   );
-  const diferencia = totalAportado - Number(form.total_recibo || 0);
-  const diferenciaPorPiso =
-    numPisosActualles > 0 ? diferencia / numPisosActualles : 0;
+
+  const difference = totalContributed - Number(form.total_receipt || 0);
+  const differencePerFloor = totalFloors > 0 ? difference / totalFloors : 0;
 
   useEffect(() => {
-    if (!periodoSeleccionado || periodoSeleccionado === "nuevo") {
-      setForm({
-        mes: "",
-        total_recibo: "",
-        aportes: crearAportesBase(numPisosActualles),
-      });
+    // 1. Si no hay periodo seleccionado o es nuevo, forzamos los pisos actuales
+    if (!selectedPeriod || selectedPeriod === "nuevo") {
+      setForm((prev) => ({
+        ...prev,
+        month: "",
+        total_receipt: "",
+        contributions: createBaseContributions(totalFloors), // Aquí se crean los 6
+      }));
       return;
     }
 
-    const repartos = JSON.parse(localStorage.getItem("repartos")) || [];
-    const repartoExistente = repartos.find(
-      (r) => r.mes === periodoSeleccionado && r.servicio === servicio
+    // 2. Si hay algo guardado en LocalStorage
+    const savedDistributions =
+      JSON.parse(localStorage.getItem("repartos")) || [];
+    const existingDistribution = savedDistributions.find(
+      (r) => r.month === selectedPeriod && r.service === service,
     );
 
-    if (repartoExistente) {
-      setForm(repartoExistente);
-    } else {
-      const historial = servicio === "agua" ? historialAgua : historialLuz;
-      const reciboOriginal = historial.find((r) =>
-        r.fecha.startsWith(periodoSeleccionado)
-      );
-      const total_recibo = reciboOriginal?.importe_total || "";
-      const montoTotal = reciboOriginal?.total || "";
+    if (existingDistribution) {
+      // 1. Extraemos los aportes guardados
+      let updatedContributions = [...existingDistribution.contributions];
 
-      const nuevosAportes = crearAportesBase(numPisosActualles).map(
-        (aporte) => {
-          if (aporte.piso === miPisoAdmin) {
-            return { ...aporte, monto: montoTotal, pagado: true };
-          }
-          return aporte;
-        }
+      // 2. Si ahora hay más pisos que antes, agregamos los que faltan
+      if (updatedContributions.length < totalFloors) {
+        const missingFloorsCount = totalFloors - updatedContributions.length;
+        const startFloor = updatedContributions.length + 1;
+
+        const extraFloors = Array.from(
+          { length: missingFloorsCount },
+          (_, i) => ({
+            floor: startFloor + i,
+            amount: "",
+            is_paid: false,
+          }),
+        );
+
+        updatedContributions = [...updatedContributions, ...extraFloors];
+      }
+      // 3. Si ahora hay menos pisos (por si reduces el edificio), recortamos
+      else if (updatedContributions.length > totalFloors) {
+        updatedContributions = updatedContributions.slice(0, totalFloors);
+      }
+
+      setForm({
+        ...existingDistribution,
+        contributions: updatedContributions, // Ahora tiene los pisos correctos
+      });
+    } else {
+      // Si NO existe (es un mes limpio), generamos la base con el totalFloors actualizado
+      const history = service === "agua" ? waterHistory : lightHistory;
+      const originalReceipt = history.find((r) =>
+        r.fecha.startsWith(selectedPeriod),
       );
 
       setForm({
-        mes: periodoSeleccionado,
-        total_recibo: total_recibo,
-        servicio,
-        aportes: nuevosAportes,
+        month: selectedPeriod,
+        total_receipt: originalReceipt?.importe_total || 0,
+        service,
+        contributions: createBaseContributions(totalFloors).map((c) => {
+          // Auto-llenado de tu piso (adminFloor)
+          if (c.floor === adminFloor && originalReceipt) {
+            return { ...c, amount: originalReceipt.total || "", is_paid: true };
+          }
+          return c;
+        }),
       });
     }
-  }, [
-    periodoSeleccionado,
-    servicio,
-    historialAgua,
-    historialLuz,
-    configuracion,
-  ]);
+  }, [selectedPeriod, service, totalFloors, adminFloor]); // <--- VITAL: totalFloors aquí
 
   const handleTogglePago = (index) => {
     setForm((prev) => {
-      const nuevosAportes = [...prev.aportes];
+      const nuevosAportes = [...prev.contributions];
       nuevosAportes[index] = {
         ...nuevosAportes[index],
-        pagado: !nuevosAportes[index].pagado,
+        is_paid: !nuevosAportes[index].is_paid,
       };
-      return { ...prev, aportes: nuevosAportes };
+      return { ...prev, contributions: nuevosAportes };
     });
   };
 
@@ -101,53 +127,65 @@ export default function Reparto() {
 
   const handleAporteChange = (index, value) => {
     setForm((prev) => {
-      const nuevosAportes = [...prev.aportes];
+      const nuevosAportes = [...prev.contributions];
       nuevosAportes[index] = {
         ...nuevosAportes[index],
-        monto: value,
+        amount: value,
       };
 
       return {
         ...prev,
-        aportes: nuevosAportes,
+        contributions: nuevosAportes,
       };
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const guardados = JSON.parse(localStorage.getItem("repartos")) || [];
 
-      const indexExistente = guardados.findIndex(
-        (r) => r.servicio === servicio && r.mes === form.mes
+    try {
+      const storageKey = "repartos";
+      const savedDistributions =
+        JSON.parse(localStorage.getItem(storageKey)) || [];
+      console.log("savedDistributions: ", savedDistributions);
+      const existingIndex = savedDistributions.findIndex(
+        (item) => item.service === service && item.month === form.month,
       );
 
-      const reparto = {
+      const newDistribution = {
         id:
-          indexExistente !== -1
-            ? guardados[indexExistente].id
+          existingIndex !== -1
+            ? savedDistributions[existingIndex].id
             : crypto.randomUUID(),
-        servicio,
-        mes: form.mes,
-        total_recibo: Number(form.total_recibo),
-        aportes: form.aportes.map((a) => ({
-          piso: a.piso,
-          monto: Number(a.monto || 0),
-          pagado: a.pagado,
+        service: service,
+        month: form.month,
+        total_receipt: Number(form.total_receipt),
+        contributions: form.contributions.map((item) => ({
+          floor: item.floor,
+          amount: Number(item.amount || 0),
+          is_paid: item.is_paid,
         })),
-        actualizado_en: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      if (indexExistente !== -1) {
-        guardados[indexExistente] = reparto;
+      let updatedList;
+      if (existingIndex !== -1) {
+        updatedList = [...savedDistributions];
+        updatedList[existingIndex] = newDistribution;
       } else {
-        guardados.push(reparto);
+        updatedList = [...savedDistributions, newDistribution];
       }
-      localStorage.setItem("repartos", JSON.stringify(guardados));
-      notify.success("Reparto guardado correctamente");
-    } catch (e) {
-      console.error(e);
+
+      localStorage.setItem(storageKey, JSON.stringify(updatedList));
+
+      notify.success(
+        existingIndex !== -1
+          ? "Reparto actualizado correctamente"
+          : "Reparto guardado correctamente",
+      );
+    } catch (error) {
+      console.error("Error saving distribution:", error);
+      notify.error("Ocurrió un error al guardar los datos.");
     }
   };
 
@@ -157,10 +195,10 @@ export default function Reparto() {
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
-            name="servicio"
+            name="service"
             value="agua"
-            checked={servicio === "agua"}
-            onChange={() => setServicio("agua")}
+            checked={service === "agua"}
+            onChange={() => setService("agua")}
             className="accent-purple-600"
           />
           Agua
@@ -169,10 +207,10 @@ export default function Reparto() {
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
-            name="servicio"
+            name="service"
             value="luz"
-            checked={servicio === "luz"}
-            onChange={() => setServicio("luz")}
+            checked={service === "luz"}
+            onChange={() => setService("luz")}
             className="accent-purple-600"
           />
           Luz
@@ -181,12 +219,11 @@ export default function Reparto() {
 
       <div>
         <h2 className="font-semibold mb-4">
-          {servicio == "luz" ? "Luz" : "Agua"}
+          {service == "luz" ? "Luz" : "Agua"}
         </h2>
         <div className="py-2">
           <form action="" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* RESUMEN */}
               <div className="lg:col-span-1 rounded-xl border border-purple-200 bg-white p-4 shadow-sm">
                 <h3 className="mb-4 text-sm font-semibold text-slate-700">
                   Resumen del recibo
@@ -200,27 +237,27 @@ export default function Reparto() {
                     <input
                       type="number"
                       step="0.01"
-                      name="total_recibo"
-                      value={form.total_recibo}
+                      name="total_receipt"
+                      value={form.total_receipt}
                       onChange={handleChange}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-purple-500 text-right"
                     />
                   </div>
 
                   <div
                     className={`rounded-xl p-4 text-sm transition-colors ${
-                      diferencia === 0
+                      differencePerFloor === 0
                         ? "bg-emerald-50 border border-emerald-100 text-emerald-800"
-                        : diferencia < 0
-                        ? "bg-amber-50 border border-amber-100 text-amber-800"
-                        : "bg-blue-50 border border-blue-100 text-blue-800"
+                        : differencePerFloor < 0
+                          ? "bg-amber-50 border border-amber-100 text-amber-800"
+                          : "bg-blue-50 border border-blue-100 text-blue-800"
                     }`}
                   >
                     <div className="space-y-2">
                       <p className="flex justify-between">
                         <span>Total aportado:</span>
                         <span className="font-bold text-base">
-                          S/ {totalAportado.toFixed(2)}
+                          S/ {totalContributed.toFixed(2)}
                         </span>
                       </p>
 
@@ -228,24 +265,24 @@ export default function Reparto() {
                         <span>Diferencia total:</span>
                         <span
                           className={`font-bold ${
-                            diferencia < 0 ? "text-red-600" : ""
+                            differencePerFloor < 0 ? "text-red-600" : ""
                           }`}
                         >
-                          S/ {diferencia.toFixed(2)}
+                          S/ {differencePerFloor.toFixed(2)}
                         </span>
                       </p>
 
                       <div className="mt-3 p-2 bg-white/50 rounded-lg border border-current/5">
                         <p className="mt-1 font-medium">
-                          {diferencia === 0
+                          {differencePerFloor === 0
                             ? "El reparto cuadra perfectamente."
-                            : diferencia < 0
-                            ? `Cobrar S/ ${Math.abs(diferenciaPorPiso).toFixed(
-                                2
-                              )} adicionales por piso.`
-                            : `Devolver S/ ${diferenciaPorPiso.toFixed(
-                                2
-                              )} a cada piso.`}
+                            : differencePerFloor < 0
+                              ? `Cobrar S/ ${Math.abs(
+                                  differencePerFloor,
+                                ).toFixed(2)} adicionales por piso.`
+                              : `Devolver S/ ${differencePerFloor.toFixed(
+                                  2,
+                                )} a cada piso.`}
                         </p>
                       </div>
                     </div>
@@ -259,20 +296,21 @@ export default function Reparto() {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {form.aportes.map((item, index) => (
+                  {form.contributions.map((item, index) => (
                     <div
-                      key={`piso-key-${item.piso}`}
+                      key={`piso-key-${item.floor}`}
                       className="flex items-center gap-3"
                     >
                       <span className="w-16 text-sm text-slate-600">
-                        Piso {item.piso}
+                        Piso {item.floor}
                       </span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={item.pagado}
+                          checked={item.is_paid}
                           onChange={() => handleTogglePago(index)}
                           className="sr-only peer"
+                          placeholder="0.00"
                         />
                         <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                       </label>
@@ -280,7 +318,7 @@ export default function Reparto() {
                       <input
                         type="number"
                         step="0.01"
-                        value={item.monto}
+                        value={item.amount}
                         onChange={(e) =>
                           handleAporteChange(index, e.target.value)
                         }
@@ -293,7 +331,7 @@ export default function Reparto() {
                 <div className="py-3 flex justify-end">
                   <button
                     type="submit"
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl flex items-center gap-2 transition-colors"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl flex items-center gap-2 transition-colors font-semibold"
                   >
                     <FileCheck size={18} />
                     Guardar reparto

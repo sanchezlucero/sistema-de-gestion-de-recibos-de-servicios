@@ -17,14 +17,12 @@ export default function FileUploader({ onDataExtracted, type }) {
     formData.append("categoria", type); // Aquí enviamos si es 'agua' o 'luz'
 
     try {
-      // Usamos la misma ruta unificada que creamos en app.py
       const response = await fetch("http://localhost:3001/procesar-recibo", {
         method: "POST",
         body: formData,
       });
       const data = await response.json();
-      console.log("data: ",data)
-      onDataExtracted(data); // Devolvemos los datos al componente padre (Agua o Luz)
+      onDataExtracted(data);
     } catch (error) {
       console.error("Error al procesar:", error);
     } finally {

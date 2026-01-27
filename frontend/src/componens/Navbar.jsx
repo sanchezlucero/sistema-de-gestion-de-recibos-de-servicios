@@ -1,27 +1,27 @@
 import { Menu, ChevronDown, Calendar, Plus, Check } from "lucide-react";
 import { useContext, useMemo, useState } from "react";
-import { ReciboContext } from "../context/ReciboContext";
+import { ReceiptContext } from "../context/ReceiptContext";
 import { useLocation } from "react-router-dom";
 
 export default function Navbar({ onToggleSidebar }) {
   const location = useLocation();
   const {
-    historialAgua,
-    historialLuz,
-    periodoSeleccionado,
-    setPeriodoSeleccionado,
-  } = useContext(ReciboContext);
+    waterHistory,
+    lightHistory,
+    selectedPeriod,
+    setSelectedPeriod,
+  } = useContext(ReceiptContext);
 
   const tituloPeriodo = useMemo(() => {
-    if (periodoSeleccionado === "nuevo") return "Nuevo Registro en curso...";
-    if (!periodoSeleccionado) return "Seleccione un periodo";
+    if (selectedPeriod === "nuevo") return "Nuevo Registro en curso...";
+    if (!selectedPeriod) return "Seleccione un periodo";
 
-    const fecha = new Date(periodoSeleccionado + "-01T00:00:00");
+    const fecha = new Date(selectedPeriod + "-01T00:00:00");
     return `Resumen de ${fecha.toLocaleDateString("es-ES", {
       month: "long",
       year: "numeric",
     })}`;
-  }, [periodoSeleccionado]);
+  }, [selectedPeriod]);
 
   const getHeaderTitle = () => {
     switch (location.pathname) {
@@ -42,11 +42,11 @@ export default function Navbar({ onToggleSidebar }) {
 
   const periodosUnicos = useMemo(() => {
     const fechas = [
-      ...historialAgua.map((r) => r.fecha.substring(0, 7)),
-      ...historialLuz.map((r) => r.fecha.substring(0, 7)),
+      ...waterHistory.map((r) => r.fecha.substring(0, 7)),
+      ...lightHistory.map((r) => r.fecha.substring(0, 7)),
     ];
     return [...new Set(fechas)].sort().reverse();
-  }, [historialAgua, historialLuz]);
+  }, [waterHistory, lightHistory]);
 
   const formatearFecha = (fechaStr) => {
     if (fechaStr === "nuevo") return "+ Nuevo Registro";
@@ -86,7 +86,7 @@ export default function Navbar({ onToggleSidebar }) {
             className="flex items-center justify-between min-w-[200px] bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-2xl px-4 py-2.5 hover:border-purple-300 hover:bg-purple-50/30 transition-all shadow-sm group"
           >
             <span className="capitalize">
-              {formatearFecha(periodoSeleccionado)}
+              {formatearFecha(selectedPeriod)}
             </span>
             <ChevronDown
               size={18}
@@ -106,11 +106,11 @@ export default function Navbar({ onToggleSidebar }) {
               <div className="absolute right-0 mt-2 w-full min-w-[220px] bg-white border border-slate-100 rounded-2xl shadow-xl z-20 py-2 animate-in fade-in zoom-in duration-200 origin-top-right">
                 <button
                   onClick={() => {
-                    setPeriodoSeleccionado("nuevo");
+                    setSelectedPeriod("nuevo");
                     setIsOpen(false);
                   }}
                   className={`w-full flex items-center gap-2 px-4 py-3 text-sm font-bold transition-colors ${
-                    periodoSeleccionado === "nuevo"
+                    selectedPeriod === "nuevo"
                       ? "text-purple-600 bg-purple-50"
                       : "text-purple-500 hover:bg-purple-50/50"
                   }`}
@@ -127,17 +127,17 @@ export default function Navbar({ onToggleSidebar }) {
                     <button
                       key={p}
                       onClick={() => {
-                        setPeriodoSeleccionado(p);
+                        setSelectedPeriod(p);
                         setIsOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm capitalize transition-colors ${
-                        periodoSeleccionado === p
+                        selectedPeriod === p
                           ? "bg-purple-600 text-white font-bold"
                           : "text-slate-600 hover:bg-slate-50"
                       }`}
                     >
                       {formatearFecha(p)}
-                      {periodoSeleccionado === p && <Check size={14} />}
+                      {selectedPeriod === p && <Check size={14} />}
                     </button>
                   ))}
                 </div>

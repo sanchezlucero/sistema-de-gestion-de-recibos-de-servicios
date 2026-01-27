@@ -1,61 +1,31 @@
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/images/pluz_logo_1.png";
 import { LUZ_DATA_DEFAULT } from "../../constants/luzData";
-import FileUploader from "../../componens/FileUploader";
-import { ReciboContext } from "../../context/ReciboContext";
+import { ReceiptContext } from "../../context/ReceiptContext";
 import InputRecibo from "../../componens/InputRecibo";
 import { FileCheck } from "lucide-react";
 import { notify } from "../../utils/notifications";
+import FormGeneral from "../../componens/FormGeneral";
+import FormFooter from "../../componens/FormFooter";
+import { saveReceiptData } from "../../utils/functions";
+import { useReceiptManager } from "../../hooks/useReceiptManager";
 
 export default function Luz() {
   const {
-    historialLuz,
-    setHistorialLuz,
-    periodoSeleccionado,
-    setPeriodoSeleccionado,
-    configuracion,
-  } = useContext(ReciboContext);
+    lightHistory,
+    setLightHistory,
+    selectedPeriod,
+    setSelectedPeriod,
+    config,
+  } = useContext(ReceiptContext);
 
-  const [form, setForm] = useState(LUZ_DATA_DEFAULT);
-  const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    if (periodoSeleccionado === "nuevo") {
-      const guardados = historialLuz || [];
-      if (guardados.length > 0) {
-        const ultimoRecibo = [...guardados].sort(
-          (a, b) => new Date(b.fecha) - new Date(a.fecha)
-        )[0];
-
-        setForm({
-          ...LUZ_DATA_DEFAULT,
-          consumo_pasado: ultimoRecibo.consumo_actual,
-        });
-      } else {
-        setForm(LUZ_DATA_DEFAULT);
-      }
-      setTotal(0);
-    } else {
-      const encontrado = historialLuz.find((r) =>
-        r.fecha.startsWith(periodoSeleccionado)
-      );
-
-      if (encontrado) {
-        setForm(encontrado);
-        setTotal(encontrado.total || 0);
-      } else {
-        setForm({
-          ...LUZ_DATA_DEFAULT,
-          fecha: `${periodoSeleccionado}-01`,
-        });
-        setTotal(0);
-      }
-    }
-  }, [periodoSeleccionado, historialLuz]);
+  const { form, setForm, total, setTotal, handleChange } = useReceiptManager({
+    initialData: LUZ_DATA_DEFAULT,
+    history: lightHistory,
+    selectedPeriod: selectedPeriod,
+  });
 
   const calculateLuz = (datos) => {
-    console.log("llega datos : ", datos);
-
     const toFloat = (v) => (v === "" ? 0 : parseFloat(v));
     const parsedDatos = {
       consumo_pasado: toFloat(datos.consumo_pasado),
@@ -71,7 +41,7 @@ export default function Luz() {
       redondeo_actual: toFloat(datos.redondeo_actual),
       consumo_kWh: toFloat(datos.consumo_kWh),
     };
-
+    console.log("config")
     const division_pisos =
       (parsedDatos.reposicion +
         parsedDatos.cargo_fijo +
@@ -82,132 +52,66 @@ export default function Luz() {
         parsedDatos.mora +
         parsedDatos.redondeo_anterior +
         parsedDatos.redondeo_actual) /
-        configuracion?.totalPisos || 5;
-    console.log("division_pisos: ", division_pisos);
+      config?.totalFloors;
     const subtotal =
       (parsedDatos.consumo_actual - parsedDatos.consumo_pasado) *
       parsedDatos.consumo_kWh;
     console.log("subtotal: ", subtotal);
-    const total = subtotal + division_pisos;
+    console.log("division_pisos: ", division_pisos);
+    const total = (subtotal + division_pisos).toFixed(2);
+    console.log("total: ", total);
     setTotal(total);
+    console.log(":total", total);
     return total;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const {
-      fecha,
-      consumo_pasado,
-      consumo_actual,
-      importe_total,
-      consumo_kWh,
-    } = form;
-
-    if (
-      !fecha ||
-      !consumo_pasado ||
-      !consumo_actual ||
-      !importe_total ||
-      !consumo_kWh
-    ) {
-      return notify.warn("Ingresar campos obligatorios");
-    }
-
-    // Optional: Check if consumption is logical (current should be higher than past)
-    if (Number(consumo_actual) < Number(consumo_pasado)) {
-      return notify.error(
-        "El consumo actual no puede ser inferior al consumo anteriorior"
-      );
-    }
-    const periodoNuevo = form.fecha.substring(0, 7);
-
-    const recibosActuales =
-      JSON.parse(localStorage.getItem("recibosLuz")) || [];
-
-    const indexExistente = recibosActuales.findIndex(
-      (r) => r.fecha.substring(0, 7) === periodoNuevo
-    );
-
-    const nuevoRecibo = {
-      ...form,
-      id:
-        indexExistente !== -1
-          ? recibosActuales[indexExistente].id
-          : crypto.randomUUID(),
-      total: calculateLuz(form),
-    };
-
-    let nuevaLista;
-
-    if (indexExistente !== -1) {
-      nuevaLista = [...recibosActuales];
-      nuevaLista[indexExistente] = nuevoRecibo;
-      console.log(
-        "Mes duplicado detectado: Se actualizó el registro existente."
-      );
-    } else {
-      nuevaLista = [...recibosActuales, nuevoRecibo];
-      console.log("Nuevo mes registrado.");
-    }
-    localStorage.setItem("recibosLuz", JSON.stringify(nuevaLista));
-    setHistorialLuz(nuevaLista);
-    setPeriodoSeleccionado(periodoNuevo);
-
-    notify.success(
-      indexExistente !== -1
-        ? "Recibo actualizado correctamente"
-        : "Recibo guardado correctamente"
-    );
-  };
-
-  const handleChange = (e) => {
-    console.log(e.target.value);
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
+    saveReceiptData({
+      form,
+      storageKey: "recibosLuz",
+      calculateFn: calculateLuz,
+      requiredFields: [
+        "fecha",
+        "consumo_pasado",
+        "consumo_actual",
+        "importe_total",
+        "consumo_kWh",
+      ],
+      setHistorial: setLightHistory,
+      setSelectedPeriod,
     });
   };
 
+  const handleDataExtraction = (data) => {
+    setForm((prev) => ({
+      ...prev,
+      consumo_kWh: data.consumo_kWh || data.consumo_kWh || 0,
+      cargo_fijo: data.cargo_fijo || 0,
+      alumbrado: data.alumbrado || 0,
+      interes_compensatorio: data.interes_compensatorio || 0,
+      igv: data.igv || 0,
+      mora: data.mora || 0,
+      reposicion: data.reposicion || 0,
+      aporte_ley: data.aporte_ley || 0,
+      redondeo_anterior:
+        data.redondeo_anterior || data.redondeo_mes_anterior || 0,
+      redondeo_actual: data.redondeo_actual || data.redondeo_mes_actual || 0,
+      importe_total: data.importe_total || 0,
+      fecha: data.fecha
+        ? data.fecha.split("/").reverse().join("-")
+        : prev.fecha,
+    }));
+  };
   return (
-    <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <img src={logo} alt="cargando logo sedapal" className="w-32" />
-        <div className="text-right">
-          <h1 className="text-xl font-bold text-slate-800">
-            Cálculo de Recibo de Luz
-          </h1>
-          <p className="text-sm text-slate-500">
-            Sube tu PDF para autocompletar
-          </p>
-        </div>
-      </div>
-      <FileUploader
+    <>
+      <FormGeneral
+        logo={logo}
         type="luz"
-        onDataExtracted={(data) => {
-          // Usamos la versión de función de setForm para acceder al estado anterior (prev)
-          setForm((prev) => ({
-            ...prev, // Mantenemos lo que ya existe (como el consumo_pasado sugerido)
-            consumo_kWh: data.consumo_kWh || data.consumo_kWh || 0,
-            cargo_fijo: data.cargo_fijo || 0,
-            alumbrado: data.alumbrado || 0,
-            interes_compensatorio: data.interes_compensatorio || 0,
-            igv: data.igv || 0,
-            mora: data.mora || 0,
-            reposicion: data.reposicion || 0,
-            aporte_ley: data.aporte_ley || 0,
-            redondeo_anterior:
-              data.redondeo_anterior || data.redondeo_mes_anterior || 0,
-            redondeo_actual:
-              data.redondeo_actual || data.redondeo_mes_actual || 0,
-            importe_total: data.importe_total || 0,
-            fecha: data.fecha
-              ? data.fecha.split("/").reverse().join("-")
-              : prev.fecha,
-          }));
-        }}
-      />
-      <div className="py-2">
+        onFileExtracted={handleDataExtraction}
+      >
+        {" "}
         <form action="" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
             <InputRecibo
@@ -321,25 +225,9 @@ export default function Luz() {
               isWarning={form.importe_total == 0}
             />
           </div>
-
-          <div className="mt-8 rounded-xl  border border-purple-200 p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-600">Total a pagar</p>
-              <p className="text-3xl font-bold text-purple-700">
-                S/ {total?.toFixed(2)}
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl flex items-center gap-2 transition-colors"
-            >
-              <FileCheck size={18} />
-              Guardar recibo
-            </button>
-          </div>
+          <FormFooter totalAmount={total} />
         </form>
-      </div>
-    </div>
+      </FormGeneral>
+    </>
   );
 }
