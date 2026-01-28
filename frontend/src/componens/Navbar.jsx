@@ -5,12 +5,8 @@ import { useLocation } from "react-router-dom";
 
 export default function Navbar({ onToggleSidebar }) {
   const location = useLocation();
-  const {
-    waterHistory,
-    lightHistory,
-    selectedPeriod,
-    setSelectedPeriod,
-  } = useContext(ReceiptContext);
+  const { waterHistory, lightHistory, selectedPeriod, setSelectedPeriod } =
+    useContext(ReceiptContext);
 
   const tituloPeriodo = useMemo(() => {
     if (selectedPeriod === "nuevo") return "Nuevo Registro en curso...";
@@ -58,16 +54,16 @@ export default function Navbar({ onToggleSidebar }) {
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 bg-white border-b border-slate-100 shadow-sm relative z-50">
+    <header className="h-20 sm:h-24 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-100 shadow-sm relative z-50">
       <div className="flex items-center">
         <button
           onClick={onToggleSidebar}
-          className="mr-4 p-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-purple-600 transition-all active:scale-90"
+          className="mr-3 sm:mr-4 p-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-purple-600 transition-all active:scale-90"
         >
           <Menu size={20} />
         </button>
 
-        <h1 className="text-2xl font-bold text-slate-800 transition-all duration-300">
+        <h1 className="text-lg sm:text-2xl font-bold text-slate-800 transition-all duration-300">
           {getHeaderTitle()}
         </h1>
       </div>
@@ -83,14 +79,14 @@ export default function Navbar({ onToggleSidebar }) {
         <div className="relative">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center justify-between min-w-[200px] bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-2xl px-4 py-2.5 hover:border-purple-300 hover:bg-purple-50/30 transition-all shadow-sm group"
+            className="flex items-center justify-between min-w-[140px] sm:min-w-[200px] bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 hover:border-purple-300 hover:bg-purple-50/30 transition-all shadow-sm"
           >
-            <span className="capitalize">
+            <span className="capitalize truncate">
               {formatearFecha(selectedPeriod)}
             </span>
             <ChevronDown
               size={18}
-              className={`ml-2 text-slate-400 group-hover:text-purple-500 transition-transform duration-300 ${
+              className={`ml-1 sm:ml-2 text-slate-400 group-hover:text-purple-500 transition-transform duration-300 ${
                 isOpen ? "rotate-180" : ""
               }`}
             />

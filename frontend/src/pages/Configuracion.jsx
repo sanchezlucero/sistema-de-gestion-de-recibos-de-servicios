@@ -160,10 +160,10 @@ export default function Configuracion() {
           <h3 className="text-lg font-bold">Directorio de Vecinos</h3>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-50">
+              <tr className="text-slate-400 text-[10px] uppercase tracking-[0.15em] border-b border-slate-50">
                 <th className="pb-4 font-medium">Piso</th>
                 <th className="pb-4 font-medium">Nombre / Responsable</th>
                 <th className="pb-4 font-medium">
@@ -210,6 +210,39 @@ export default function Configuracion() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="md:hidden flex flex-col gap-4">
+          {config?.neighbors?.map((item) => (
+            <div
+              key={item.floor}
+              className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <span className="font-black text-slate-800">
+                  Piso {item.floor}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center border-t border-slate-50 pt-3">
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">
+                    Nombre / Responsable
+                  </p>
+                  <p className="text-sm font-semibold text-slate-600">
+                    {item.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">
+                    WhatsApp (con código de país)
+                  </p>
+                  <p className="text-sm font-semibold text-slate-600">
+                    {item.phone}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

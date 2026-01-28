@@ -6,7 +6,6 @@ import { notify } from "../../utils/notifications";
 export default function Reparto() {
   const { selectedPeriod, waterHistory, lightHistory, config } =
     useContext(ReceiptContext);
-  console.log("config ", config);
   const totalFloors = config?.totalFloors;
   const adminFloor = config?.myFloor || 2;
   const [service, setService] = useState("agua");
@@ -290,54 +289,62 @@ export default function Reparto() {
                 </div>
               </div>
 
-              <div className="lg:col-span-2 rounded-xl border border-purple-200 bg-white p-4 shadow-sm">
-                <h3 className="mb-4 text-sm font-semibold text-slate-700">
-                  Reparto por piso
-                </h3>
+              <div className="lg:col-span-2 rounded-xl border border-purple-200 bg-white p-4 sm:p-6 shadow-sm">
+  <h3 className="mb-6 text-sm font-bold text-slate-700 uppercase tracking-wider">
+    Reparto por piso
+  </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {form.contributions.map((item, index) => (
-                    <div
-                      key={`piso-key-${item.floor}`}
-                      className="flex items-center gap-3"
-                    >
-                      <span className="w-16 text-sm text-slate-600">
-                        Piso {item.floor}
-                      </span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={item.is_paid}
-                          onChange={() => handleTogglePago(index)}
-                          className="sr-only peer"
-                          placeholder="0.00"
-                        />
-                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
-                      </label>
+  {/* Cambiamos a 1 columna en tablet y 2 solo en pantallas grandes (xl) */}
+  <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-8 gap-y-4">
+    {form.contributions.map((item, index) => (
+      <div
+        key={`piso-key-${item.floor}`}
+        className="flex items-center justify-between gap-4 p-2 rounded-xl hover:bg-slate-50 transition-colors"
+      >
+        {/* Identificador y Switch agrupados */}
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="w-12 text-sm font-bold text-slate-600">
+            Piso {item.floor}
+          </span>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={item.is_paid}
+              onChange={() => handleTogglePago(index)}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+          </label>
+        </div>
 
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.amount}
-                        onChange={(e) =>
-                          handleAporteChange(index, e.target.value)
-                        }
-                        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-right  focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="S/ 0.00"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="py-3 flex justify-end">
-                  <button
-                    type="submit"
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-xl flex items-center gap-2 transition-colors font-semibold"
-                  >
-                    <FileCheck size={18} />
-                    Guardar reparto
-                  </button>
-                </div>
-              </div>
+        {/* Input con prefijo visual de moneda */}
+        <div className="relative flex-1 max-w-[150px]">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+            S/
+          </span>
+          <input
+            type="number"
+            step="0.01"
+            value={item.amount}
+            onChange={(e) => handleAporteChange(index, e.target.value)}
+            className="w-full rounded-lg border border-slate-200 pl-8 pr-3 py-2 text-sm text-right font-semibold text-slate-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div className="mt-6 pt-4 border-t border-slate-50 flex justify-end">
+    <button
+      type="submit"
+      className=" bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-purple-200 font-bold"
+    >
+      <FileCheck size={20} />
+      Guardar reparto
+    </button>
+  </div>
+</div>
             </div>
           </form>
         </div>

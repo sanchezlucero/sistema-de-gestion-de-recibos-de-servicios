@@ -72,3 +72,55 @@ export const formatPhoneForWhatsApp = (phoneNumber) => {
   if (!phoneNumber) return "";
   return phoneNumber.replace(/\D/g, "");
 };
+
+export const calculateServiceTotal = (data, type, config) => {
+  const toFloat = (v) => (v === "" || v === undefined ? 0 : parseFloat(v));
+
+  // Convertimos a objeto con números
+  const d = Object.keys(data).reduce((acc, key) => {
+    acc[key] = toFloat(data[key]);
+    return acc;
+  }, {});
+  console.log("d: ",d)
+  const floorCount = config?.totalFloors || 1;
+  const consumption = d.consumo_actual - d.consumo_pasado;
+
+  if (type === "luz") {
+    // Lógica Enel/Pluz: kWh con IGV proporcional
+    const kwhPriceWithTax = d.consumo_kWh * 1.18;
+    const individualPower = consumption * kwhPriceWithTax;
+
+    const sharedTotal =
+      (d.reposicion +
+        d.cargo_fijo +
+        d.interes_compensatorio +
+        d.alumbrado +
+        d.aporte_ley +
+        d.mora +
+        d.redondeo_anterior +
+        d.redondeo_actual) /
+      floorCount;
+
+    return (individualPower + sharedTotal).toFixed(2);
+  }
+
+  if (type === "agua") {
+    // Lógica Sedapal: Alcantarillado proporcional al consumo
+    const variableFactor =
+      (d.volumen_agua + d.servicio_alcantarillado) / (d.consumo || 1);
+    const individualWater = consumption * variableFactor;
+
+    const sharedTotal =
+      (d.cargo_fijo +
+        d.igv +
+        d.mora +
+        d.redondeo_anterior +
+        d.redondeo_actual) /
+      floorCount;
+
+    return (individualWater + sharedTotal).toFixed(2);
+  }
+
+  return "0.00";
+};
+

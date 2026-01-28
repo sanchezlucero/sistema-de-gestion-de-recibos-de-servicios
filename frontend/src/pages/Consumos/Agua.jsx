@@ -7,7 +7,7 @@ import { AGUA_DATA_DEFAULT } from "../../constants/aguaData";
 import { ReceiptContext } from "../../context/ReceiptContext";
 import FormGeneral from "../../componens/FormGeneral";
 import FormFooter from "../../componens/FormFooter";
-import { saveReceiptData } from "../../utils/functions";
+import { calculateServiceTotal, saveReceiptData } from "../../utils/functions";
 import { useReceiptManager } from "../../hooks/useReceiptManager";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -28,31 +28,7 @@ export default function Agua() {
   });
 
   const calculateAgua = (datos) => {
-    const toFloat = (v) => (v === "" ? 0 : parseFloat(v));
-    const parsedDatos = {
-      consumo_pasado: toFloat(datos.consumo_pasado),
-      consumo_actual: toFloat(datos.consumo_actual),
-      consumo: toFloat(datos.consumo),
-      volumen_agua: toFloat(datos.volumen_agua),
-      servicio_alcantarillado: toFloat(datos.servicio_alcantarillado),
-      cargo_fijo: toFloat(datos.cargo_fijo),
-      igv: toFloat(datos.igv),
-      mora: toFloat(datos.mora),
-      redondeo_anterior: toFloat(datos.redondeo_anterior),
-      redondeo_actual: toFloat(datos.redondeo_actual),
-    };
-    const division_pisos =
-      (parsedDatos.servicio_alcantarillado +
-        parsedDatos.cargo_fijo +
-        parsedDatos.igv +
-        parsedDatos.mora +
-        parsedDatos.redondeo_anterior +
-        parsedDatos.redondeo_actual) /
-      config?.totalFloors;
-    const subtotal =
-      (parsedDatos.consumo_actual - parsedDatos.consumo_pasado) *
-      (parsedDatos.volumen_agua / parsedDatos.consumo);
-    const total = (subtotal + division_pisos).toFixed(2);
+    const total = calculateServiceTotal(datos, "agua", config);
     setTotal(total);
     return total;
   };

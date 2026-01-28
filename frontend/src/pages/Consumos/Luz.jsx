@@ -1,13 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import logo from "../../assets/images/pluz_logo_1.png";
 import { LUZ_DATA_DEFAULT } from "../../constants/luzData";
 import { ReceiptContext } from "../../context/ReceiptContext";
 import InputRecibo from "../../componens/InputRecibo";
-import { FileCheck } from "lucide-react";
-import { notify } from "../../utils/notifications";
 import FormGeneral from "../../componens/FormGeneral";
 import FormFooter from "../../componens/FormFooter";
-import { saveReceiptData } from "../../utils/functions";
+import { calculateServiceTotal, saveReceiptData } from "../../utils/functions";
 import { useReceiptManager } from "../../hooks/useReceiptManager";
 
 export default function Luz() {
@@ -26,42 +24,8 @@ export default function Luz() {
   });
 
   const calculateLuz = (datos) => {
-    const toFloat = (v) => (v === "" ? 0 : parseFloat(v));
-    const parsedDatos = {
-      consumo_pasado: toFloat(datos.consumo_pasado),
-      consumo_actual: toFloat(datos.consumo_actual),
-      reposicion: toFloat(datos.reposicion),
-      cargo_fijo: toFloat(datos.cargo_fijo),
-      interes_compensatorio: toFloat(datos.interes_compensatorio),
-      alumbrado: toFloat(datos.alumbrado),
-      igv: toFloat(datos.igv),
-      aporte_ley: toFloat(datos.aporte_ley),
-      mora: toFloat(datos.mora),
-      redondeo_anterior: toFloat(datos.redondeo_anterior),
-      redondeo_actual: toFloat(datos.redondeo_actual),
-      consumo_kWh: toFloat(datos.consumo_kWh),
-    };
-    console.log("config")
-    const division_pisos =
-      (parsedDatos.reposicion +
-        parsedDatos.cargo_fijo +
-        parsedDatos.interes_compensatorio +
-        parsedDatos.alumbrado +
-        parsedDatos.igv +
-        parsedDatos.aporte_ley +
-        parsedDatos.mora +
-        parsedDatos.redondeo_anterior +
-        parsedDatos.redondeo_actual) /
-      config?.totalFloors;
-    const subtotal =
-      (parsedDatos.consumo_actual - parsedDatos.consumo_pasado) *
-      parsedDatos.consumo_kWh;
-    console.log("subtotal: ", subtotal);
-    console.log("division_pisos: ", division_pisos);
-    const total = (subtotal + division_pisos).toFixed(2);
-    console.log("total: ", total);
+    const total = calculateServiceTotal(datos, "luz", config);
     setTotal(total);
-    console.log(":total", total);
     return total;
   };
 
