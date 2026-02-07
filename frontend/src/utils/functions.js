@@ -81,46 +81,33 @@ export const calculateServiceTotal = (data, type, config) => {
     acc[key] = toFloat(data[key]);
     return acc;
   }, {});
-  console.log("d: ",d)
   const floorCount = config?.totalFloors || 1;
   const consumption = d.consumo_actual - d.consumo_pasado;
 
-  if (type === "luz") {
-    // Lógica Enel/Pluz: kWh con IGV proporcional
-    const kwhPriceWithTax = d.consumo_kWh * 1.18;
-    const individualPower = consumption * kwhPriceWithTax;
+if (type === "luz") {
+  const kwhPriceWithTax = d.consumo_kWh * 1.18;
+  const individualPower = Number((consumption * kwhPriceWithTax).toFixed(2));
+  
+  const sharedSum = (d.reposicion + d.cargo_fijo + d.interes_compensatorio + d.alumbrado + d.aporte_ley + d.refacturacion + d.igv_refact + d.mora + d.redondeo_anterior + d.redondeo_actual);
+  const sharedTotal = Number((sharedSum / floorCount).toFixed(2));
 
-    const sharedTotal =
-      (d.reposicion +
-        d.cargo_fijo +
-        d.interes_compensatorio +
-        d.alumbrado +
-        d.aporte_ley +
-        d.mora +
-        d.redondeo_anterior +
-        d.redondeo_actual) /
-      floorCount;
-
-    return (individualPower + sharedTotal).toFixed(2);
-  }
+  return (individualPower + sharedTotal).toFixed(2);
+}
 
   if (type === "agua") {
-    // Lógica Sedapal: Alcantarillado proporcional al consumo
-    const variableFactor =
+    // 1. Calculate the cost per cubic meter (Water + Sewerage)
+    const costPerUnit =
       (d.volumen_agua + d.servicio_alcantarillado) / (d.consumo || 1);
-    const individualWater = consumption * variableFactor;
+    const individualNet = consumption * costPerUnit;
+    const individualTax = individualNet * 0.18;
+    const individualTotal = individualNet + individualTax;
 
-    const sharedTotal =
-      (d.cargo_fijo +
-        d.igv +
-        d.mora +
-        d.redondeo_anterior +
-        d.redondeo_actual) /
-      floorCount;
-
-    return (individualWater + sharedTotal).toFixed(2);
+    const sharedBase =
+      d.cargo_fijo + d.mora + d.redondeo_anterior + d.redondeo_actual;
+    const sharedTax = d.cargo_fijo * 0.18;
+    const sharedTotal = (sharedBase + sharedTax) / floorCount;
+    return (individualTotal + sharedTotal).toFixed(2);
   }
 
   return "0.00";
 };
-

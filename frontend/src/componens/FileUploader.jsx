@@ -22,6 +22,7 @@ export default function FileUploader({ onDataExtracted, type }) {
         body: formData,
       });
       const data = await response.json();
+      console.log(data)
       onDataExtracted(data);
     } catch (error) {
       console.error("Error al procesar:", error);

@@ -113,6 +113,10 @@ def extraer_datos_pluz(texto):
         "redondeo_anterior": extraer_monto_regex(r"Redondeo Mes Anterior\s*([-\d.]+)", texto),
         "redondeo_actual": extraer_monto_regex(r"Redondeo Mes Actual\s*([-\d.]+)", texto),
         "consumo_kWh": extraer_monto_regex(r"al precio de S/\s*([\d.]+)", texto),
+        "refacturacion": extraer_monto_regex(r"Refacturaci[oó]n\s+AP\s+2025-1\s*(-?[\d.]+)", texto),
+
+        # Escapamos los puntos y el porcentaje para que los busque literalmente
+        "igv_refact": extraer_monto_regex(r"I\.G\.V\.\s+18\%\s+Refact\.\s*(-?[\d.]+)", texto),
         "fecha": fecha_iso
     }
 

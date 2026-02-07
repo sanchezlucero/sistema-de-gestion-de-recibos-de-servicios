@@ -13,4 +13,6 @@ export const LUZ_DATA_DEFAULT = {
   importe_total: "",
   consumo_kWh: "",
   mora: "",
+  refacturacion: "",
+  igv_refact: "",
 };

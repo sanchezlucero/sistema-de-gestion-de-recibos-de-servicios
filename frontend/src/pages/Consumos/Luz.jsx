@@ -49,6 +49,7 @@ export default function Luz() {
   };
 
   const handleDataExtraction = (data) => {
+    console.log("data: ",data)
     setForm((prev) => ({
       ...prev,
       consumo_kWh: data.consumo_kWh || data.consumo_kWh || 0,
@@ -63,6 +64,9 @@ export default function Luz() {
         data.redondeo_anterior || data.redondeo_mes_anterior || 0,
       redondeo_actual: data.redondeo_actual || data.redondeo_mes_actual || 0,
       importe_total: data.importe_total || 0,
+      refacturacion: data.refacturacion || 0,
+      igv_refact: data.igv_refact || 0,
+
       fecha: data.fecha
         ? data.fecha.split("/").reverse().join("-")
         : prev.fecha,
@@ -170,6 +174,20 @@ export default function Luz() {
               value={form.redondeo_actual}
               onChange={handleChange}
               isWarning={form.redondeo_actual == 0}
+            />
+            <InputRecibo
+              label="Refacturación AP 2025-1"
+              name="refacturacion"
+              value={form.refacturacion}
+              onChange={handleChange}
+              isWarning={form.refacturacion == 0}
+            />
+            <InputRecibo
+              label="I.G.V. 18% Refact"
+              name="igv_refact"
+              value={form.igv_refact}
+              onChange={handleChange}
+              isWarning={form.igv_refact == 0}
             />
 
             <InputRecibo

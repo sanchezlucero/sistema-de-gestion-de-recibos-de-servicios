@@ -2,14 +2,12 @@ import {
   Lightbulb,
   Droplets,
   Wallet,
-  MoreVertical,
-  Camera,
-  FileText,
   Eye,
 } from "lucide-react";
 import React, { useContext, useMemo, useState } from "react";
 import { ReceiptContext } from "../context/ReceiptContext";
 import { DetailModal } from "../componens/DetailModal";
+import { notify } from "../utils/notifications";
 
 export default function Dashboard() {
   const { selectedPeriod, lightHistory, waterHistory, config, distributions } =
@@ -32,6 +30,7 @@ export default function Dashboard() {
 
   const consolidatedData = useMemo(() => {
     const distributions = getSavedDistributions();
+    console.log("distributions: ",distributions)
     const floorList = Array.from({ length: totalFloors }, (_, i) => i + 1);
 
     const lightDist = distributions.find(
@@ -40,7 +39,7 @@ export default function Dashboard() {
     const waterDist = distributions.find(
       (r) => r.month === selectedPeriod && r.service === "agua",
     );
-
+    console.log("waterDist: ",waterDist)
     return floorList.map((floorNum) => {
       const lightEntry = lightDist?.contributions?.find(
         (a) => a.floor === floorNum,
@@ -71,6 +70,7 @@ export default function Dashboard() {
       };
     });
   }, [selectedPeriod, totalFloors, neighbors, distributions]);
+  console.log("consolidatedData: ",consolidatedData)
 
   const myDues = useMemo(() => {
     const me = consolidatedData.find((d) => d.floor === myFloor);
@@ -79,6 +79,19 @@ export default function Dashboard() {
 
   const downloadPDF = (type) => {
     console.log("type: ", type);
+  };
+
+  const handleViewDetail = (item, type) => {
+    console.log("item ",item)
+    if (!item) {
+      notify.warn("No hay información registrada para este periodo");
+      return; // Detenemos la ejecución, el modal nunca se abre
+    }
+    setSelectedDetail({
+      type: type,
+      mode: "personal",
+      data: item,
+    });
   };
 
   return (
@@ -97,13 +110,7 @@ export default function Dashboard() {
           title="Mi Cuota Luz"
           amount={myDues.light}
           isPersonal
-          onClick={() =>
-            setSelectedDetail({
-              type: "luz",
-              mode: "personal",
-              data: currentLightReceipt,
-            })
-          }
+          onClick={() => handleViewDetail(currentLightReceipt, "luz")}
         />
         <StatCard
           icon={<Droplets size={32} />}
@@ -121,13 +128,7 @@ export default function Dashboard() {
           title="Mi Cuota Agua"
           amount={myDues.water}
           isPersonal
-          onClick={() =>
-            setSelectedDetail({
-              type: "agua",
-              mode: "personal",
-              data: currentWaterReceipt,
-            })
-          }
+          onClick={() => handleViewDetail(currentWaterReceipt, "agua")}
         />
       </div>
 
@@ -336,7 +337,7 @@ function TableRow({ item, myFloor }) {
               <a
                 href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
                   `Hola ${item.neighborName}, detalle del mes:\n` +
-                    `💡 Luz: S/ ${item.light.toFixed(2)}\n💧 Agua: S/ ${item.water.toFixed(2)}\n` +
+                    `Luz: S/ ${item.light.toFixed(2)}\n Agua: S/ ${item.water.toFixed(2)}\n` +
                     `Total: *S/ ${item.total.toFixed(2)}*\nEstado: ${item.status}`,
                 )}`}
                 target="_blank"
