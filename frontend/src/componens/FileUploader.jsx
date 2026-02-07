@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Upload } from "lucide-react";
 
 export default function FileUploader({ onDataExtracted, type }) {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -17,12 +18,12 @@ export default function FileUploader({ onDataExtracted, type }) {
     formData.append("categoria", type); // Aquí enviamos si es 'agua' o 'luz'
 
     try {
-      const response = await fetch("http://localhost:3001/procesar-recibo", {
+      const response = await fetch(API_URL + "/procesar-recibo", {
         method: "POST",
         body: formData,
       });
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       onDataExtracted(data);
     } catch (error) {
       console.error("Error al procesar:", error);
