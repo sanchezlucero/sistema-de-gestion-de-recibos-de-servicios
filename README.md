@@ -9,7 +9,7 @@ Para un correcto funcionamiento, sigue este orden en la aplicación:
  * Sube el recibo oficial (Pluz o Sedapal).
  * El sistema usará Python y PDFPlumber para extraer montos y fechas automáticamente.
  * Guarda los datos base del recibo.
- ** Repartos**: Una vez registrado el recibo general, ve a la sección de repartos para ingresar las lecturas de los demás pisos y generar el cálculo individual.
+ * ** Repartos**: Una vez registrado el recibo general, ve a la sección de repartos para ingresar las lecturas de los demás pisos y generar el cálculo individual.
 
 ## Tecnologías utilizadas:
 * ** Frontend**: React + Vite (Interfaz rápida y reactiva).
@@ -17,10 +17,10 @@ Para un correcto funcionamiento, sigue este orden en la aplicación:
 * ** Extracción de datos**: PDFPlumber (Scraping de precisión para PDFs de Pluz y Sedapal).
 
 ## Funcionalidades:
-** Carga de PDF: El sistema lee el recibo oficial y extrae automáticamente los montos, fechas y más detalle del PDF.
-** Cálculo por Diferencial: Ingreso de consumo de mes anterior  y mes actual.
-** Cálculo automático del consumo del piso.
-** Auto-llenado: Los datos extraídos del PDF se mapean directamente a los campos de la interfaz para evitar errores manuales.
+* ** Carga de PDF**: El sistema lee el recibo oficial y extrae automáticamente los montos, fechas y más detalle del PDF.
+* ** Cálculo por Diferencial**: Ingreso de consumo de mes anterior  y mes actual.
+* ** Cálculo automático del consumo del piso.
+* ** Auto-llenado**: Los datos extraídos del PDF se mapean directamente a los campos de la interfaz para evitar errores manuales.
 
 ##Instalación y Uso:
 ### 1. Backend (Flask)
