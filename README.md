@@ -4,8 +4,8 @@ Este sistema automatiza la extracción de datos de recibos de servicios en forma
 
 ## Flujo de Trabajo (Importante)
 Para un correcto funcionamiento, sigue este orden en la aplicación:
- ** Configuración: Lo primero es dirigirse al apartado de configuración para definir la cantidad de pisos del edificio.
- ** Registro / Carga de PDF: * Sube el recibo oficial (Pluz o Sedapal).
+ * ** Configuración: Lo primero es dirigirse al apartado de configuración para definir la cantidad de pisos del edificio.
+ * ** Registro / Carga de PDF: * Sube el recibo oficial (Pluz o Sedapal).
  ** El sistema usará Python y PDFPlumber para extraer montos y fechas automáticamente.
  ** Guarda los datos base del recibo.
  ** Repartos: Una vez registrado el recibo general, ve a la sección de repartos para ingresar las lecturas de los demás pisos y generar el cálculo individual.
