@@ -31,3 +31,7 @@ Para un correcto funcionamiento, sigue este orden en la aplicación:
      cd frontend
      npm install
      npm run dev
+## Almacenamiento y Persistencia
+Para esta versión, el sistema utiliza **LocalStorage**:
+* Los datos de configuración (número de pisos) y registros se almacenan localmente en el navegador.
+* Esto permite que la aplicación sea rápida y funcione sin necesidad de una base de datos externa compleja, manteniendo la privacidad de los datos en tu dispositivo.
