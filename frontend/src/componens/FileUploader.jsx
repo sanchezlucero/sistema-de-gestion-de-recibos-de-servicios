@@ -24,14 +24,17 @@ export default function FileUploader({ onDataExtracted, type }) {
         body: formData,
       });
       if (!response.ok) {
-        throw new Error(`Error del servidor: ${response.status}`);
+        const errorDetail = await response.text();
+        notify.error(`Status: ${response.status} - ${errorDetail}`);
+
+        throw new Error(`Status: ${response.status} - ${errorDetail}`);
       }
 
       const data = await response.json();
       onDataExtracted(data);
     } catch (error) {
       console.error("Error al procesar:", error);
-      notify.error("No se pudo conectar con el servidor");
+      // notify.error("No se pudo conectar con el servidor");
     } finally {
       setLoading(false);
     }

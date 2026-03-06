@@ -24,9 +24,9 @@ export default function Luz() {
   });
 
   const calculateLuz = (datos) => {
-    const total = calculateServiceTotal(datos, "luz", config);
-    setTotal(total);
-    return total;
+    const result = calculateServiceTotal(datos, "luz", config);
+    setTotal(result.total);
+    return result.total;
   };
 
   const handleSubmit = (e) => {

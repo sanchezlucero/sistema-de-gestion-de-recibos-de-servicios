@@ -28,9 +28,9 @@ export default function Agua() {
   });
 
   const calculateAgua = (datos) => {
-    const total = calculateServiceTotal(datos, "agua", config);
-    setTotal(total);
-    return total;
+    const result = calculateServiceTotal(datos, "agua", config);
+    setTotal(result.total);
+    return result.total;
   };
 
   const handleSubmit = (e) => {

@@ -1,5 +1,6 @@
 import { toPng } from "html-to-image";
 import { notify } from "../utils/notifications";
+import { calculateServiceTotal } from "../utils/functions";
 
 export function DetailModal({ isOpen, onClose, config, data, type, mode }) {
   console.log("data: ", data);
@@ -19,7 +20,9 @@ export function DetailModal({ isOpen, onClose, config, data, type, mode }) {
       { label: "I.G.V. 18% Refact.", key: "igv_refact" },
     ],
     agua: [
+      { label: "Servicio de alcantarillado", key: "servicio_alcantarillado" },
       { label: "Cargo Fijo", key: "cargo_fijo" },
+      { label: "I.G.V.", key: "igv" },
       { label: "Mora", key: "mora" },
       { label: "Redondeo Mes Anterior", key: "redondeo_anterior" },
       { label: "Redondeo Mes Actual", key: "redondeo_actual" },
@@ -28,79 +31,30 @@ export function DetailModal({ isOpen, onClose, config, data, type, mode }) {
   const fieldsToShow = FIELD_CONFIG[type] || [];
 
   const serviceCalculators = {
-    luz: (data, floors) => {
+    luz: (data) => {
       if (!data) return null;
-      const consumptionDelta =
-        Number(data.consumo_actual || 0) - Number(data.consumo_pasado || 0);
-      const kwhPriceWithTax = Number(data.consumo_kWh || 0) * 1.18;
-
-      // Calculamos y redondeamos cada bloque a 2 decimales para que la suma sea exacta en pantalla
-      const individualUsage = Number(
-        (consumptionDelta * kwhPriceWithTax).toFixed(2),
-      );
-
-      const sharedKeys = [
-        "reposicion",
-        "cargo_fijo",
-        "interes_compensatorio",
-        "alumbrado",
-        "aporte_ley",
-        "mora",
-        "redondeo_anterior",
-        "redondeo_actual",
-        "refacturacion",
-        "igv_refact",
-      ];
-      const sharedTotalBuilding = sharedKeys.reduce(
-        (acc, key) => acc + Number(data[key] || 0),
-        0,
-      );
-      const sharedPerFloor = Number((sharedTotalBuilding / floors).toFixed(2));
+      const result = calculateServiceTotal(data, "luz", config);
 
       return {
-        individual: individualUsage.toFixed(2),
-        consumptionDelta: consumptionDelta.toFixed(2),
-        shared: sharedPerFloor.toFixed(2),
-        kwh_igv: kwhPriceWithTax.toFixed(4),
-        total: (individualUsage + sharedPerFloor).toFixed(2),
+        individual: result.individual,
+        consumptionDelta: result.consumptionDelta,
+        shared: result.shared,
+        total: result.total,
       };
     },
 
-    agua: (data, floors) => {
+    agua: (data) => {
       if (!data) {
         return;
       }
-      const consumptionDelta =
-        Number(data.consumo_actual || 0) - Number(data.consumo_pasado || 0);
-
-      const variableFactor =
-        (Number(data.volumen_agua || 0) +
-          Number(data.servicio_alcantarillado || 0)) /
-        Number(data.consumo || 1);
-
-      const individualNet = consumptionDelta * variableFactor;
-      const individualUsage = individualNet * 1.18;
-
-      const sharedKeys = [
-        "cargo_fijo",
-        "mora",
-        "redondeo_anterior",
-        "redondeo_actual",
-      ];
-      const sharedBase = sharedKeys.reduce(
-        (acc, key) => acc + Number(data[key] || 0),
-        0,
-      );
-
-      const sharedWithTax = sharedBase + Number(data.cargo_fijo || 0) * 0.18;
-      const sharedSubtotal = sharedWithTax / floors;
+      const result = calculateServiceTotal(data, "agua", config);
 
       return {
-        individual: individualUsage.toFixed(2),
-        shared: sharedSubtotal.toFixed(2),
-        unitPrice: (variableFactor * 1.18).toFixed(3), // <-- Envía esto a la imagen
-        consumptionDelta: consumptionDelta.toFixed(2),
-        total: (individualUsage + sharedSubtotal).toFixed(2),
+        individual: result.individual,
+        shared: result.shared,
+        consumptionDelta: result.consumptionDelta,
+        total: result.total,
+        unitPrice: result.unitPrice,
       };
     },
   };
@@ -174,17 +128,23 @@ export function DetailModal({ isOpen, onClose, config, data, type, mode }) {
             <div className="flex justify-between text-xs">
               <div className="text-slate-500 text-[11px]">
                 Lectura: {data?.consumo_actual} - {data?.consumo_pasado} ={" "}
-                {results?.consumptionDelta}
+                <strong>
+                  {results?.consumptionDelta} {type === "luz" ? "kWh" : "m³"}
+                </strong>
                 <br />
                 {type === "luz" ? (
                   <>
-                    Diferencia x S/ {data?.consumo_kWh} * 1.18 = S/{" "}
-                    {(data?.consumo_kWh * 1.18).toFixed(3)}
+                    {results?.consumptionDelta} kWh x S/{" "}
+                    {Number(data?.consumo_kWh).toFixed(4)} (Costo Energía)
                   </>
                 ) : (
                   <>
-                    Diferencia x S/ {results?.unitPrice} (Factor Agua/Alc. +
-                    IGV)
+                    <>
+                      <span>
+                        {results?.consumptionDelta} m³ x S/ {results?.unitPrice}{" "}
+                        (Factor solo Agua Potable)
+                      </span>
+                    </>
                   </>
                 )}
               </div>

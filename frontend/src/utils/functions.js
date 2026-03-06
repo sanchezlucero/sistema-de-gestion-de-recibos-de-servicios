@@ -74,40 +74,80 @@ export const formatPhoneForWhatsApp = (phoneNumber) => {
 };
 
 export const calculateServiceTotal = (data, type, config) => {
+  console.log("data ", data);
+  const floorCount = config?.totalFloors || 5;
   const toFloat = (v) => (v === "" || v === undefined ? 0 : parseFloat(v));
 
-  // Convertimos a objeto con números
+  // Convertimos todo el objeto a números de una vez
   const d = Object.keys(data).reduce((acc, key) => {
     acc[key] = toFloat(data[key]);
     return acc;
   }, {});
-  const floorCount = config?.totalFloors || 1;
-  const consumption = d.consumo_actual - d.consumo_pasado;
+  console.log(d);
+  const consumptionDelta = d.consumo_actual - d.consumo_pasado;
 
-if (type === "luz") {
-  const kwhPriceWithTax = d.consumo_kWh * 1.18;
-  const individualPower = Number((consumption * kwhPriceWithTax).toFixed(2));
-  
-  const sharedSum = (d.reposicion + d.cargo_fijo + d.interes_compensatorio + d.alumbrado + d.aporte_ley + d.refacturacion + d.igv_refact + d.mora + d.redondeo_anterior + d.redondeo_actual);
-  const sharedTotal = Number((sharedSum / floorCount).toFixed(2));
+  if (type === "luz") {
+    const individualUsage = d.consumo_kWh * consumptionDelta;
 
-  return (individualPower + sharedTotal).toFixed(2);
-}
+    const sharedKeys = [
+      "reposicion",
+      "cargo_fijo",
+      "interes_compensatorio",
+      "alumbrado",
+      "igv",
+      "aporte_ley",
+      "mora",
+      "redondeo_anterior",
+      "redondeo_actual",
+      "refacturacion",
+      "igv_refact",
+    ];
 
-  if (type === "agua") {
-    // 1. Calculate the cost per cubic meter (Water + Sewerage)
-    const costPerUnit =
-      (d.volumen_agua + d.servicio_alcantarillado) / (d.consumo || 1);
-    const individualNet = consumption * costPerUnit;
-    const individualTax = individualNet * 0.18;
-    const individualTotal = individualNet + individualTax;
+    const sharedTotalBuilding = sharedKeys.reduce(
+      (acc, key) => acc + (d[key] || 0),
+      0,
+    );
+    const sharedPerFloor = Number(
+      (sharedTotalBuilding / floorCount).toFixed(2),
+    );
+    const total = (individualUsage + sharedPerFloor).toFixed(2);
 
-    const sharedBase =
-      d.cargo_fijo + d.mora + d.redondeo_anterior + d.redondeo_actual;
-    const sharedTax = d.cargo_fijo * 0.18;
-    const sharedTotal = (sharedBase + sharedTax) / floorCount;
-    return (individualTotal + sharedTotal).toFixed(2);
+    return {
+      individual: individualUsage.toFixed(2),
+      shared: sharedPerFloor.toFixed(2),
+      consumptionDelta: consumptionDelta.toFixed(2),
+      total: total,
+    };
   }
 
-  return "0.00";
+  if (type === "agua") {
+    // Respetando tu lógica original:
+    // 1. Solo el Volumen de Agua es variable por m3
+    const mult = d.volumen_agua / d.consumo;
+    console.log("mult ", mult);
+    const sub = consumptionDelta * mult;
+    console.log("sub ", sub);
+
+    // 2. El Alcantarillado y todo lo demás va a la suma compartida (/5)
+    const sharedSum =
+      d.servicio_alcantarillado +
+      d.cargo_fijo +
+      d.igv +
+      d.mora +
+      d.redondeo_anterior +
+      d.redondeo_actual;
+
+    const div_sharedSum = sharedSum / floorCount;
+    const totalValue = sub + div_sharedSum;
+
+    // Retornamos el objeto con los nombres de variables en inglés
+    return {
+      individual: sub.toFixed(2),
+      shared: div_sharedSum.toFixed(2),
+      unitPrice: mult.toFixed(2),
+      consumptionDelta: consumptionDelta.toFixed(2),
+      total: totalValue.toFixed(2),
+    };
+  }
+  return { total: "0.00" };
 };
