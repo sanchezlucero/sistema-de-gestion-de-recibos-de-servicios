@@ -12,6 +12,7 @@ export function DetailModal({ isOpen, onClose, config, data, type, mode }) {
       { label: "Cargo Fijo", key: "cargo_fijo" },
       { label: "Int. Compensatorio", key: "interes_compensatorio" },
       { label: "Alumbrado", key: "alumbrado" },
+      { label: "I.G.V.", key: "igv" },
       { label: "Aporte Ley N° 28749", key: "aporte_ley" },
       { label: "Mora", key: "mora" },
       { label: "Redondeo Mes Anterior", key: "redondeo_anterior" },
